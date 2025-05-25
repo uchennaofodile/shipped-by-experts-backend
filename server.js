@@ -88,6 +88,7 @@ app.get('/api/available-truckers', async (req, res) => {
 
 // Route to assign trucker based on proximity and optimize route
 app.post('/api/assign-trucker', async (req, res) => {
+  console.log("Assign trucker route hit"); // Debugging log
   const { shipment_id, pickup_location, dropoff_location, waypoints } = req.body;
 
   try {
@@ -114,13 +115,14 @@ app.post('/api/assign-trucker', async (req, res) => {
 
       // Use Google Maps API to get directions and optimize the route
       const directions = await googleMapsClient.directions({
-        origin: origin,
-        destination: destination,
-        waypoints: waypoints,  // Additional waypoints for optimized routing
-        optimizeWaypoints: true,
-        mode: 'driving',
-        traffic_model: 'best_guess'
-      }).asPromise();
+  origin: `${pickup_location.latitude},${pickup_location.longitude}`,
+  destination: `${dropoff_location.latitude},${dropoff_location.longitude}`,
+  waypoints: waypoints.map(waypoint => `${waypoint.latitude},${waypoint.longitude}`), // Format waypoints correctly
+  //optimizeWaypoints: true,
+  mode: 'driving',
+  traffic_model: 'best_guess'
+}).asPromise();
+
 
       const optimizedRoute = directions.json.routes[0];
 
