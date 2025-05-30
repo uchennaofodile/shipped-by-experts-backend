@@ -5,9 +5,7 @@ const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const geolib = require('geolib');
-const googleMapsClient = require('@google/maps').createClient({
-  key: process.env.GOOGLE_MAPS_API_KEY
-});
+const mapbox = require('@mapbox/mapbox-sdk/services/directions'); // Mapbox SDK for directions
 
 // Load environment variables from .env file
 dotenv.config();
@@ -27,6 +25,9 @@ const client = new Client({
 
 // Connect to PostgreSQL
 client.connect().catch(err => console.error('Connection error', err.stack));
+
+// Set up Mapbox client
+const mapboxClient = mapbox({ accessToken: process.env.MAPBOX_API_KEY });
 
 // Route for customer registration
 app.post('/api/register', async (req, res) => {
@@ -86,7 +87,7 @@ app.get('/api/available-truckers', async (req, res) => {
   }
 });
 
-// Route to assign trucker based on proximity and optimize route
+// Route to assign trucker based on proximity and optimize route using Mapbox API
 app.post('/api/assign-trucker', async (req, res) => {
   console.log("Assign trucker route hit"); // Debugging log
   const { shipment_id, pickup_location, dropoff_location, waypoints } = req.body;
@@ -108,28 +109,27 @@ app.post('/api/assign-trucker', async (req, res) => {
       }
     });
 
-    // If a trucker is found, proceed with route optimization
+    // If a trucker is found, proceed with route optimization using Mapbox API
     if (closestTrucker) {
-      const origin = pickup_location;
-      const destination = dropoff_location;
+      const optimizedWaypoints = [pickup_location, ...waypoints, dropoff_location];
 
-      // Use Google Maps API to get directions and optimize the route
-      const directions = await googleMapsClient.directions({
-  origin: `${pickup_location.latitude},${pickup_location.longitude}`,
-  destination: `${dropoff_location.latitude},${dropoff_location.longitude}`,
-  waypoints: waypoints.map(waypoint => `${waypoint.latitude},${waypoint.longitude}`), // Format waypoints correctly
-  //optimizeWaypoints: true,
-  mode: 'driving',
-  traffic_model: 'best_guess'
-}).asPromise();
+      // Format waypoints for Mapbox API (in the order pickup -> waypoints -> dropoff)
+      const coordinates = optimizedWaypoints.map(point => [point.longitude, point.latitude]);
 
+      // Request to Mapbox Directions API for optimized route
+      const directionsResponse = await mapboxClient.getDirections({
+        waypoints: coordinates,
+        profile: 'driving', // This can be 'driving', 'walking', 'cycling', etc.
+        steps: true,
+        geometries: 'geojson', // To get the route geometry as GeoJSON
+      }).send();
 
-      const optimizedRoute = directions.json.routes[0];
+      const optimizedRoute = directionsResponse.body.routes[0].geometry.coordinates;
 
       // Log the optimized route and assign it to the shipment
       console.log('Optimized Route:', optimizedRoute);
 
-      // Store the optimized route in the database if needed
+      // Store the optimized route in the database
       await client.query('UPDATE shipments SET trucker_id = $1, route_data = $2 WHERE id = $3', [
         closestTrucker.id,
         JSON.stringify(optimizedRoute),
@@ -141,6 +141,7 @@ app.post('/api/assign-trucker', async (req, res) => {
       res.status(404).json({ message: 'No available truckers found' });
     }
   } catch (err) {
+    console.error('Error assigning trucker and optimizing route:', err.stack); // Log error
     res.status(500).json({ message: 'Error assigning trucker and optimizing route', error: err.stack });
   }
 });
