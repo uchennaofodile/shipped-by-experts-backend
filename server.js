@@ -113,8 +113,8 @@ app.post('/api/assign-trucker', async (req, res) => {
     if (closestTrucker) {
       const optimizedWaypoints = [pickup_location, ...waypoints, dropoff_location];
 
-      // Format waypoints for Mapbox API (in the order pickup -> waypoints -> dropoff)
-      const coordinates = optimizedWaypoints.map(point => [point.longitude, point.latitude]);
+      // Convert waypoints to the required format for Mapbox API
+      const coordinates = optimizedWaypoints.map(point => [point.longitude, point.latitude]); // 
 
       // Request to Mapbox Directions API for optimized route
       const directionsResponse = await mapboxClient.getDirections({
