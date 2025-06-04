@@ -12,9 +12,12 @@ import adminRoutes from './adminRoutes.js';
 import profileRoutes from './profileRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
+import reviewRoutes from './reviewRoutes.js';
+import oauthRoutes from './oauthRoutes.js';
 // ...
 
 router.use('/auth', authRoutes);
+router.use('/auth', oauthRoutes);
 router.use('/vehicles', vehicleRoutes);
 router.use('/shipments', shipmentRoutes);
 router.use('/payments', paymentRoutes);
@@ -24,6 +27,7 @@ router.use('/admin', adminRoutes);
 router.use('/profile', profileRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/reviews', reviewRoutes);
 // router.use('/users', userRoutes);
 // ...
 
