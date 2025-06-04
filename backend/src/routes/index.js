@@ -9,6 +9,9 @@ import paymentRoutes from './paymentRoutes.js';
 import matchingRoutes from './matchingRoutes.js';
 import trackingRoutes from './trackingRoutes.js';
 import adminRoutes from './adminRoutes.js';
+import profileRoutes from './profileRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
+import dashboardRoutes from './dashboardRoutes.js';
 // ...
 
 router.use('/auth', authRoutes);
@@ -18,6 +21,9 @@ router.use('/payments', paymentRoutes);
 router.use('/matching', matchingRoutes);
 router.use('/tracking', trackingRoutes);
 router.use('/admin', adminRoutes);
+router.use('/profile', profileRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/dashboard', dashboardRoutes);
 // router.use('/users', userRoutes);
 // ...
 
