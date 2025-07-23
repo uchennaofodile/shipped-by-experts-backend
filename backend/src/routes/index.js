@@ -14,6 +14,7 @@ import notificationRoutes from './notificationRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import reviewRoutes from './reviewRoutes.js';
 import oauthRoutes from './oauthRoutes.js';
+import bookingRoutes from './bookingRoutes.js';
 // ...
 
 router.use('/auth', authRoutes);
@@ -28,6 +29,7 @@ router.use('/profile', profileRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/bookings', bookingRoutes);
 // router.use('/users', userRoutes);
 // ...
 
