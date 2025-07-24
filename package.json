@@ -4,7 +4,9 @@
   "description": "A platform that connects customers and truckers to streamline vehicle shipping by filling spare truck capacity.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "repository": {
     "type": "git",

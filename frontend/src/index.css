@@ -1,35 +1,80 @@
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: 'Uber Move', 'Segoe UI', Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: #f7f7f7;
-  color: #222;
+  background: #181818;
+  color: #fff;
+  min-height: 100vh;
 }
 
-input, button {
-  margin: 8px 0;
-  padding: 8px;
-  font-size: 1rem;
+input, button, select, textarea {
+  margin: 12px 0;
+  padding: 14px 16px;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+input, select, textarea {
+  background: #232323;
+  color: #fff;
+  border: 1.5px solid #333;
+  transition: border 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border: 1.5px solid #1ee66b;
 }
 
 button {
-  background: #1976d2;
-  color: #fff;
+  background: linear-gradient(90deg, #1ee66b 0%, #05c46b 100%);
+  color: #181818;
+  font-weight: 600;
   border: none;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(30,230,107,0.08);
+  letter-spacing: 0.5px;
 }
-
 button:hover {
-  background: #125ea2;
+  background: linear-gradient(90deg, #05c46b 0%, #1ee66b 100%);
+  color: #fff;
 }
 
-div {
-  margin: 24px auto;
-  max-width: 400px;
-  background: #fff;
-  padding: 32px;
+div.card, .card {
+  margin: 32px auto;
+  max-width: 420px;
+  background: #232323;
+  padding: 40px 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+
+a {
+  color: #1ee66b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #232323;
+}
+::-webkit-scrollbar-thumb {
+  background: #1ee66b;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+@media (max-width: 600px) {
+  div.card, .card {
+    padding: 24px 8px;
+    max-width: 98vw;
+  }
 }

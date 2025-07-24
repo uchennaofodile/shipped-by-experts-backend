@@ -1,14 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const luhnCheck = (num) => {
+  let arr = (num + '').split('').reverse().map(x => parseInt(x));
+  let sum = arr.reduce((acc, val, idx) => {
+    if (idx % 2) {
+      val *= 2;
+      if (val > 9) val -= 9;
+    }
+    return acc + val;
+  }, 0);
+  return sum % 10 === 0;
+};
 
 const Payment = () => {
   const navigate = useNavigate();
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvc, setCvc] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    const cleanCard = cardNumber.replace(/\D/g, '');
+    if (!/^\d{13,19}$/.test(cleanCard) || !luhnCheck(cleanCard)) {
+      errs.cardNumber = 'Invalid card number';
+    }
+    if (!/^(0[1-9]|1[0-2])\/(\d{2})$/.test(expiry)) {
+      errs.expiry = 'Invalid expiry (MM/YY)';
+    } else {
+      const [mm, yy] = expiry.split('/').map(Number);
+      const now = new Date();
+      const expDate = new Date(2000 + yy, mm);
+      if (expDate < now) {
+        errs.expiry = 'Card expired';
+      }
+    }
+    if (!/^\d{3,4}$/.test(cvc)) {
+      errs.cvc = 'Invalid CVC';
+    }
+    return errs;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would normally handle payment logic (API call)
-    // For now, just navigate to the next step
-    navigate('/confirmation');
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length === 0) {
+      // Here you would normally handle payment logic (API call)
+      navigate('/confirmation');
+    }
   };
 
   return (
@@ -16,9 +57,30 @@ const Payment = () => {
       <h2>Payment Information</h2>
       <p>Secure payment via Stripe or PayPal (integration placeholder).</p>
       <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="Card Number" required />
-        <input type="text" placeholder="Expiry Date (MM/YY)" required />
-        <input type="text" placeholder="CVC" required />
+        <input
+          type="text"
+          placeholder="Card Number"
+          value={cardNumber}
+          onChange={e => setCardNumber(e.target.value)}
+          required
+        />
+        {errors.cardNumber && <div style={{color:'#ff5252', marginBottom:8}}>{errors.cardNumber}</div>}
+        <input
+          type="text"
+          placeholder="Expiry Date (MM/YY)"
+          value={expiry}
+          onChange={e => setExpiry(e.target.value)}
+          required
+        />
+        {errors.expiry && <div style={{color:'#ff5252', marginBottom:8}}>{errors.expiry}</div>}
+        <input
+          type="text"
+          placeholder="CVC"
+          value={cvc}
+          onChange={e => setCvc(e.target.value)}
+          required
+        />
+        {errors.cvc && <div style={{color:'#ff5252', marginBottom:8}}>{errors.cvc}</div>}
         <button type="submit">Pay</button>
       </form>
     </div>
