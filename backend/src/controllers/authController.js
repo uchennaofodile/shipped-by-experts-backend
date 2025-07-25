@@ -20,12 +20,11 @@ export const register = async (req, res) => {
     const user = await User.create({
       firstName,
       lastName,
-      name: `${firstName} ${lastName}`,
       email,
       password: hashed,
       role: role || 'customer'
     });
-    res.status(201).json({ id: user.id, name: user.name, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role });
+    res.status(201).json({ id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed' });
   }
@@ -39,7 +38,7 @@ export const login = async (req, res) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });
   }
