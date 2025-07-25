@@ -13,11 +13,8 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Car Shipping API');
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+// Centralized error handling middleware
+app.use(require('./backend/src/middleware/errorHandler'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
