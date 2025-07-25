@@ -1,49 +1,87 @@
 import { User } from '../models/User.js';
 import bcrypt from 'bcrypt';
 
-export const getProfile = async (req, res) => {
+export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, { attributes: { exclude: ['password'] } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      const err = new Error('User not found');
+      err.status = 404;
+      err.isPublic = true;
+      return next(err);
+    }
     res.json(user);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch profile' });
+    err.status = 500;
+    err.isPublic = false;
+    next(err);
   }
 };
 
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const { name, email } = req.body;
+    if (!user) {
+      const err = new Error('User not found');
+      err.status = 404;
+      err.isPublic = true;
+      return next(err);
+    }
+    const { firstName, lastName, email } = req.body;
     // Input validation
-    if (name && typeof name !== 'string') {
-      return res.status(400).json({ error: 'Invalid name' });
+    if (firstName && typeof firstName !== 'string') {
+      const err = new Error('Invalid first name');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
+    }
+    if (lastName && typeof lastName !== 'string') {
+      const err = new Error('Invalid last name');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
     }
     if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      return res.status(400).json({ error: 'Invalid email address' });
+      const err = new Error('Invalid email address');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
     }
-    if (name) user.name = name;
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
     if (email) user.email = email;
     await user.save();
     res.json({ message: 'Profile updated', user });
   } catch (err) {
-    console.error('Profile update error:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    err.status = 500;
+    err.isPublic = false;
+    next(err);
   }
 };
 
-export const changePassword = async (req, res) => {
+export const changePassword = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      const err = new Error('User not found');
+      err.status = 404;
+      err.isPublic = true;
+      return next(err);
+    }
     const { oldPassword, newPassword } = req.body;
     const valid = await bcrypt.compare(oldPassword, user.password);
-    if (!valid) return res.status(401).json({ error: 'Old password incorrect' });
+    if (!valid) {
+      const err = new Error('Old password incorrect');
+      err.status = 401;
+      err.isPublic = true;
+      return next(err);
+    }
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
     res.json({ message: 'Password changed' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to change password' });
+    err.status = 500;
+    err.isPublic = false;
+    next(err);
   }
 };
