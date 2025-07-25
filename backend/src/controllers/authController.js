@@ -4,29 +4,27 @@ import { User } from '../models/User.js';
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role, firstName, lastName } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
     const existing = await User.findOne({ where: { email } });
     if (existing) return res.status(400).json({ error: 'Email already in use' });
-    const hashed = await bcrypt.hash(password, 10);
-    let user;
-    if (role === 'customer') {
-      if (!firstName || !lastName) {
-        return res.status(400).json({ error: 'First name and last name are required for customers' });
-      }
-      user = await User.create({
-        firstName,
-        lastName,
-        name: `${firstName} ${lastName}`,
-        email,
-        password: hashed,
-        role
-      });
-    } else {
-      if (!name) {
-        return res.status(400).json({ error: 'Name is required' });
-      }
-      user = await User.create({ name, email, password: hashed, role });
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: 'First name and last name are required' });
     }
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return res.status(400).json({ error: 'A valid email is required' });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      firstName,
+      lastName,
+      name: `${firstName} ${lastName}`,
+      email,
+      password: hashed,
+      role: role || 'customer'
+    });
     res.status(201).json({ id: user.id, name: user.name, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed' });
