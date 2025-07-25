@@ -38,13 +38,23 @@ export const createPaymentIntent = async (req, res) => {
 
 export const updatePaymentStatus = async (req, res) => {
   try {
+    // Require authentication (assume req.user is set by auth middleware)
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     const { paymentIntentId, status } = req.body;
+    // Input validation
+    if (!paymentIntentId || typeof paymentIntentId !== 'string') {
+      return res.status(400).json({ error: 'Invalid or missing paymentIntentId' });
+    }
+    if (!status || !['pending', 'succeeded', 'failed'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid or missing status' });
+    }
     const payment = await Payment.findOne({ where: { stripePaymentId: paymentIntentId } });
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
     payment.status = status;
     await payment.save();
     res.json({ message: 'Payment status updated' });
   } catch (err) {
+    console.error('Update payment status error:', err);
     res.status(500).json({ error: 'Failed to update payment status' });
   }
 };
