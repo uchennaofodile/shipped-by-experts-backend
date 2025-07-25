@@ -1,14 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would normally handle registration logic (API call)
-    // For now, just navigate to the next step
-    navigate('/vehicle-shipping-info');
+    const form = e.target;
+    const fullName = form[0].value;
+    const email = form[1].value;
+    const password = form[2].value;
+    // Make API call to backend to register user
+    fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName, email, password })
+    })
+      .then(async res => {
+        if (!res.ok) throw new Error((await res.json()).error || 'Registration failed');
+        return res.json();
+      })
+      .then(() => {
+        localStorage.setItem('userEmail', email);
+        navigate('/vehicle-shipping-info');
+      })
+      .catch(err => {
+        setErrors({ api: err.message });
+      });
   };
 
   return (
@@ -19,6 +38,7 @@ const Register = () => {
         <input type="email" placeholder="Email" required />
         <input type="password" placeholder="Password" required />
         <button type="submit">Sign Up</button>
+        {errors.api && <div style={{color:'#ff5252', marginTop:8}}>{errors.api}</div>}
       </form>
       <div style={{ marginTop: 16 }}>
         <button>Sign up with Google</button>

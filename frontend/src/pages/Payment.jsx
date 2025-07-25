@@ -47,8 +47,29 @@ const Payment = () => {
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
-      // Here you would normally handle payment logic (API call)
-      navigate('/confirmation');
+      // Make API call to backend to process payment
+      const paymentData = {
+        cardNumber,
+        expiry,
+        cvc,
+        email: localStorage.getItem('userEmail') || 'test@example.com', // Example fallback
+        // Add other required fields as needed
+      };
+      fetch('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData)
+      })
+        .then(async res => {
+          if (!res.ok) throw new Error((await res.json()).error || 'Payment failed');
+          return res.json();
+        })
+        .then(() => {
+          navigate('/confirmation');
+        })
+        .catch(err => {
+          setErrors({ api: err.message });
+        });
     }
   };
 
@@ -82,6 +103,7 @@ const Payment = () => {
         />
         {errors.cvc && <div style={{color:'#ff5252', marginBottom:8}}>{errors.cvc}</div>}
         <button type="submit">Pay</button>
+      {errors.api && <div style={{color:'#ff5252', marginBottom:8}}>{errors.api}</div>}
       </form>
     </div>
   );

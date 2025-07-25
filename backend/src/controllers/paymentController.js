@@ -4,7 +4,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createPaymentIntent = async (req, res) => {
   try {
+    // Require authentication (assume req.user is set by auth middleware)
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     const { amount, shipmentId } = req.body;
+    // Input validation
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid or missing amount' });
+    }
+    if (!shipmentId) {
+      return res.status(400).json({ error: 'Missing shipmentId' });
+    }
     const userId = req.user.id;
     // Create a Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -22,6 +31,7 @@ export const createPaymentIntent = async (req, res) => {
     });
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
+    console.error('Payment intent error:', err);
     res.status(500).json({ error: 'Failed to create payment intent' });
   }
 };

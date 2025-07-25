@@ -69,8 +69,32 @@ const VehicleShippingInfo = () => {
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
-      // Here you would normally handle vehicle info logic (API call)
-      navigate('/payment');
+      // Make API call to backend to book shipment
+      const bookingData = {
+        make: showCustomMake ? customMake : make,
+        model: showCustomModel ? customModel : model,
+        year,
+        pickup: `${pickupStreet}, ${pickupCity}, ${pickupState} ${pickupZip}`,
+        dropoff: `${dropoffStreet}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`,
+        // Add email or other required fields as needed
+        email: localStorage.getItem('userEmail') || 'test@example.com', // Example fallback
+        estimatedCost: 0 // You may want to calculate this or get from backend
+      };
+      fetch('/api/book-shipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      })
+        .then(async res => {
+          if (!res.ok) throw new Error((await res.json()).error || 'Booking failed');
+          return res.json();
+        })
+        .then(() => {
+          navigate('/payment');
+        })
+        .catch(err => {
+          setErrors({ api: err.message });
+        });
     }
   };
 
@@ -218,6 +242,7 @@ const VehicleShippingInfo = () => {
         {errors.dropoffZip && <div style={{color:'#ff5252', marginBottom:8}}>{errors.dropoffZip}</div>}
 
         <button type="submit">Continue</button>
+      {errors.api && <div style={{color:'#ff5252', marginBottom:8}}>{errors.api}</div>}
       </form>
     </div>
   );
