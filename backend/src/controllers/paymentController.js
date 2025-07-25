@@ -2,17 +2,28 @@ import Stripe from 'stripe';
 import { Payment } from '../models/Payment.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export const createPaymentIntent = async (req, res) => {
+export const createPaymentIntent = async (req, res, next) => {
   try {
     // Require authentication (assume req.user is set by auth middleware)
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!req.user) {
+      const err = new Error('Unauthorized');
+      err.status = 401;
+      err.isPublic = true;
+      return next(err);
+    }
     const { amount, shipmentId } = req.body;
     // Input validation
     if (!amount || typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({ error: 'Invalid or missing amount' });
+      const err = new Error('Invalid or missing amount');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
     }
     if (!shipmentId) {
-      return res.status(400).json({ error: 'Missing shipmentId' });
+      const err = new Error('Missing shipmentId');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
     }
     const userId = req.user.id;
     // Create a Stripe payment intent
@@ -31,31 +42,49 @@ export const createPaymentIntent = async (req, res) => {
     });
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
-    console.error('Payment intent error:', err);
-    res.status(500).json({ error: 'Failed to create payment intent' });
+    err.status = 500;
+    err.isPublic = false;
+    next(err);
   }
 };
 
-export const updatePaymentStatus = async (req, res) => {
+export const updatePaymentStatus = async (req, res, next) => {
   try {
     // Require authentication (assume req.user is set by auth middleware)
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!req.user) {
+      const err = new Error('Unauthorized');
+      err.status = 401;
+      err.isPublic = true;
+      return next(err);
+    }
     const { paymentIntentId, status } = req.body;
     // Input validation
     if (!paymentIntentId || typeof paymentIntentId !== 'string') {
-      return res.status(400).json({ error: 'Invalid or missing paymentIntentId' });
+      const err = new Error('Invalid or missing paymentIntentId');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
     }
     if (!status || !['pending', 'succeeded', 'failed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid or missing status' });
+      const err = new Error('Invalid or missing status');
+      err.status = 400;
+      err.isPublic = true;
+      return next(err);
     }
     const payment = await Payment.findOne({ where: { stripePaymentId: paymentIntentId } });
-    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+    if (!payment) {
+      const err = new Error('Payment not found');
+      err.status = 404;
+      err.isPublic = true;
+      return next(err);
+    }
     payment.status = status;
     await payment.save();
     res.json({ message: 'Payment status updated' });
   } catch (err) {
-    console.error('Update payment status error:', err);
-    res.status(500).json({ error: 'Failed to update payment status' });
+    err.status = 500;
+    err.isPublic = false;
+    next(err);
   }
 };
 
